@@ -1,5 +1,5 @@
-import { Alert, TextField, styled } from '@mui/material'
-import React, { useState } from 'react'
+import { Alert, TablePagination, TextField, styled } from '@mui/material'
+import React, { useEffect, useState } from 'react'
 
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -30,6 +30,15 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const Job_form = () => {
 
+
+  useEffect(() => {
+    get_jobs()
+  }, [])
+
+  const [alert_message, setalert_message] = useState("")
+  const [method, setmethod] = useState("post")
+  const [dataId, setdataId] = useState(0)
+
   const [snackopen, setsnackopen] = useState(false);
 
   const snackhandleClose = (event, reason) => {
@@ -44,6 +53,19 @@ const Job_form = () => {
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
+    setmethod("post")
+    setJobsetails({
+      job_title: "",
+      job_short_description: "",
+      job_description: "",
+      job_requirements: "",
+      job_responsibilities: "",
+      qualifications_and_skills: "",
+      job_department: "",
+      job_location: "",
+      sallary: "",
+      job_type: ""
+    })
     setOpen(true);
   };
 
@@ -89,11 +111,15 @@ const Job_form = () => {
   const [job_list, setJobList] = useState([])
 
 
+  const URL = `https://jsonplaceholder.typicode.com/posts`
+
   const create_a_job = async (url, data) => {
     const my_data = JSON.stringify(data)
     try {
       const res = await axios.post(url, my_data)
       if (res.status >= 200 && res.status < 300) {
+        setalert_message("Data POsted Successfully")
+        setOpen(false)
         setsnackopen(true)
         get_jobs()
         console.log(res.data);
@@ -116,13 +142,11 @@ const Job_form = () => {
     }
   }
 
-  const get_jobs = async (url, data) => {
-    const my_data = JSON.stringify(data)
+  const get_jobs = async () => {
     try {
-      const res = await axios.post(url, my_data)
+      const res = await axios.get(URL)
       if (res.status >= 200 && res.status < 300) {
         setJobList(res.data)
-        setsnackopen(true)
       }
     } catch (error) {
       console.log(error.message);
@@ -131,30 +155,71 @@ const Job_form = () => {
 
 
 
-  const onsubmitHandeler = () => {
-    // job_list.push(job_details)
-    // console.log(job_list);
+
+  const onsubmitHandeler = async () => {
+    if (method === "update" && dataId !== 0) {
+      console.log(dataId);
+      try {
+        const res = await axios.patch(`${URL}/${dataId}`, job_details)
+        if (res.status >= 200 && res.status < 300) {
+          setalert_message("Update Successfully")
+          setOpen(false)
+          setsnackopen(true)
+          console.log(res.data)
+          get_jobs()
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    } else {
+      create_a_job(URL, job_details)
+
+    }
+
     // setsnackopen(true)
     // setOpen(false);
-    // setJobsetails({
-    //   job_title: "",
-    //   job_short_description: "",
-    //   job_description: "",
-    //   job_requirements: "",
-    //   job_responsibilities: "",
-    //   qualifications_and_skills: "",
-    //   job_department: "",
-    //   job_location: "",
-    //   sallary: "",
-    //   job_type: ""
-    // })
+  }
 
-    // create_a_job()
+  const job_delete_handeler = async (id) => {
+    console.log(id);
+    try {
+      const res = await axios.delete(`${URL}/${id}`)
+      if (res.status >= 200 && res.status < 300) {
+        setalert_message("Deleted Successfully")
+        setsnackopen(true)
+        get_jobs()
+        console.log(res.data);
+      }
+    } catch (error) {
+      console.log(error.message);
+    }
   }
 
 
+  // job update handeler start
+  const job_update_handeler = async (id) => {
+    setdataId(id)
+    setmethod("update")
+    const data = job_list.length > 0 && job_list.filter((data) => data.id === id)[0]
+    setJobsetails({
+      job_title: data.job_title,
+      job_short_description: data.job_short_description,
+      job_description: data.job_description,
+      job_requirements: data.job_requirements,
+      job_responsibilities: data.job_responsibilities,
+      qualifications_and_skills: data.qualifications_and_skills,
+      job_department: data.job_department,
+      job_location: data.job_location,
+      sallary: data.sallary,
+      job_type: data.job_type
+    })
+    setOpen(true)
+  }
+  // job update handeler end
 
 
+
+  // table related code start
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
       backgroundColor: "#1ca774",
@@ -175,6 +240,24 @@ const Job_form = () => {
     },
   }));
 
+  // pagination code start
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(+event.target.value);
+    setPage(0);
+  };
+  // pagination code end
+
+  // table related code end
+
+
+
 
   return (
     <>
@@ -182,7 +265,8 @@ const Job_form = () => {
       <>
         <Button variant="outlined" onClick={handleClickOpen}>
           Create a Job
-        </Button>
+        </Button>.
+
         <Dialog
           fullScreen
           open={open}
@@ -233,7 +317,7 @@ const Job_form = () => {
               </div>
             </form>
             <div className='w-[100%] py-[10px] flex justify-center items-center'>
-              <button className='text-white w-[250px] py-[25px] text-[20px] rounded-[10px] cursor-pointer bg-primary-text' onClick={onsubmitHandeler} >Submit</button>
+              <button className='text-white w-[250px] py-[25px] text-[20px] rounded-[10px] cursor-pointer bg-primary-text' onClick={onsubmitHandeler} >{method === "post"?"Submit":"Update"}</button>
             </div>
           </List>
         </Dialog>
@@ -242,12 +326,12 @@ const Job_form = () => {
 
         <Snackbar
           open={snackopen}
-          autoHideDuration={5000}
+          autoHideDuration={2000}
           onClose={snackhandleClose}
         // message="Data Posted Successfully"
         >
           <Alert severity="success" onClose={snackhandleClose}>
-            Data Posted Successfully
+            {alert_message && alert_message}
           </Alert>
         </Snackbar>
 
@@ -256,8 +340,8 @@ const Job_form = () => {
         {
           job_list.length > 0 &&
           <div className='w-[100%] px-[25px]'>
-            <TableContainer component={Paper} className='w-[90%] my-[20px]'>
-              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <TableContainer sx={{ maxHeight: 550 }} className='w-[90%] my-[20px]'>
+              <Table sx={{ minWidth: 650 }} stickyHeader aria-label="simple table">
                 <TableHead>
                   <TableRow>
                     <StyledTableCell>Job Title</StyledTableCell>
@@ -270,14 +354,12 @@ const Job_form = () => {
                     <StyledTableCell>Job Location</StyledTableCell>
                     <StyledTableCell>Job Type</StyledTableCell>
                     <StyledTableCell>Sallary</StyledTableCell>
-                    {/* <TableCell align="right">Calories</TableCell>
-              <TableCell align="right">Fat&nbsp;(g)</TableCell>
-              <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-              <TableCell align="right">Protein&nbsp;(g)</TableCell> */}
+                    <StyledTableCell>Update</StyledTableCell>
+                    <StyledTableCell>Delete</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {job_list && job_list.map((row) => (
+                  {job_list && job_list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                     <StyledTableRow
                       key={row.name}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -292,17 +374,69 @@ const Job_form = () => {
                       <StyledTableCell scope="row">{row.job_location}</StyledTableCell>
                       <StyledTableCell scope="row">{row.job_type}</StyledTableCell>
                       <StyledTableCell scope="row">{row.sallary}</StyledTableCell>
-                      {/* <TableCell align="right">{row.calories}</TableCell>
-                <TableCell align="right">{row.fat}</TableCell>
-                <TableCell align="right">{row.carbs}</TableCell>
-                <TableCell align="right">{row.protein}</TableCell> */}
+                      <StyledTableCell scope="row"><Button onClick={() => job_update_handeler(row.id)}>Update</Button></StyledTableCell>
+                      <StyledTableCell scope="row"><Button onClick={() => job_delete_handeler(row.id)}>Delete</Button></StyledTableCell>
                     </StyledTableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 25, 100]}
+              component="div"
+              count={job_list.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
           </div>
         }
+
+        
+        {/* {
+          job_list.length > 0 &&
+          <div className='w-[100%] px-[25px] h-[350px]'>
+            <TableContainer sx={{ maxHeight: 550 }} className='w-[90%] my-[20px]'>
+              <Table sx={{ minWidth: 750 }} stickyHeader aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <StyledTableCell sx={{ minWidth: 100 }} >User id</StyledTableCell>
+                    <StyledTableCell>Id</StyledTableCell>
+                    <StyledTableCell>Title</StyledTableCell>
+                    <StyledTableCell>Body</StyledTableCell>
+                    <StyledTableCell>Update</StyledTableCell>
+                    <StyledTableCell>Delete</StyledTableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {job_list && job_list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+                    <StyledTableRow
+                      key={row.name}
+                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    >
+                      <StyledTableCell scope="row">{row.userId}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.id}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.title}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.body}</StyledTableCell>
+                      <StyledTableCell scope="row"><Button onClick={() => job_update_handeler(row.id)}>Update</Button></StyledTableCell>
+                      <StyledTableCell scope="row"><Button onClick={() => job_delete_handeler(row.id)}>Delete</Button></StyledTableCell>
+                    </StyledTableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <TablePagination
+              rowsPerPageOptions={[10, 25, 100]}
+              component="div"
+              count={job_list.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </div>
+        } */}
       </>
 
 
