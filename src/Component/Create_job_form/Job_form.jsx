@@ -55,6 +55,7 @@ const Job_form = () => {
   const handleClickOpen = () => {
     setmethod("post")
     setJobsetails({
+      companyId: "",
       job_title: "",
       job_short_description: "",
       job_description: "",
@@ -75,6 +76,7 @@ const Job_form = () => {
 
 
   const [job_details, setJobsetails] = useState({
+    companyId:0,
     job_title: "",
     job_short_description: "",
     job_description: "",
@@ -88,6 +90,7 @@ const Job_form = () => {
   })
 
   const {
+    companyId,
     job_title,
     job_short_description,
     job_description,
@@ -172,7 +175,21 @@ const Job_form = () => {
         console.log(error)
       }
     } else {
-      create_a_job(URL, job_details)
+      const job_data = {
+        companyId:companyId,
+        jobTitle:job_title,
+        jobShortDescription:job_short_description,
+        jobDetails:job_description,
+        jobRequirements:job_requirements,
+        jobResponsibilities:job_responsibilities,
+        qualificationsAndSkills:qualifications_and_skills,
+        jobDepartment:job_department,
+        jobLocation:job_location,
+        salary:sallary,
+        jobType:job_type,
+      }
+      console.log(job_data);
+      // create_a_job(URL, job_data)
 
     }
 
@@ -202,19 +219,21 @@ const Job_form = () => {
     setmethod("update")
     const data = job_list.length > 0 && job_list.filter((data) => data.id === id)[0]
     setJobsetails({
-      job_title: data.job_title,
-      job_short_description: data.job_short_description,
-      job_description: data.job_description,
-      job_requirements: data.job_requirements,
-      job_responsibilities: data.job_responsibilities,
-      qualifications_and_skills: data.qualifications_and_skills,
-      job_department: data.job_department,
-      job_location: data.job_location,
-      sallary: data.sallary,
-      job_type: data.job_type
+      job_title: data.jobTitle,
+      job_short_description: data.jobShortDescription,
+      job_description: data.jobDetails,
+      job_requirements: data.jobRequirements,
+      job_responsibilities: data.jobResponsibilities,
+      qualifications_and_skills: data.qualificationsAndSkills,
+      job_department: data.jobDepartment,
+      job_location: data.jobLocation,
+      sallary: data.salary,
+      job_type: data.jobType
     })
     setOpen(true)
   }
+  
+
   // job update handeler end
 
 
@@ -286,6 +305,9 @@ const Job_form = () => {
           <List >
             <form className='w-[80%]  mx-auto mq900:w-[90%]'>
               <div className='w-[100%] py-[10px] flex justify-center items-center'>
+                <TextField className='w-[80%] mq900:w-[100%]' id="outlined-basic" label="Company Id" variant="outlined" name='companyId' value={companyId} type='number' onChange={onchnageHandeler} />
+              </div>
+              <div className='w-[100%] py-[10px] flex justify-center items-center'>
                 <TextField className='w-[80%] mq900:w-[100%]' id="outlined-basic" label="Job Title" variant="outlined" name='job_title' value={job_title} onChange={onchnageHandeler} />
               </div>
               <div className='w-[100%] py-[10px] flex justify-center items-center'>
@@ -317,7 +339,7 @@ const Job_form = () => {
               </div>
             </form>
             <div className='w-[100%] py-[10px] flex justify-center items-center'>
-              <button className='text-white w-[250px] py-[25px] text-[20px] rounded-[10px] cursor-pointer bg-primary-text' onClick={onsubmitHandeler} >{method === "post"?"Submit":"Update"}</button>
+              <button className='text-white w-[250px] py-[25px] text-[20px] rounded-[10px] cursor-pointer bg-primary-text' onClick={onsubmitHandeler} >{method === "post" ? "Submit" : "Update"}</button>
             </div>
           </List>
         </Dialog>
@@ -344,6 +366,7 @@ const Job_form = () => {
               <Table sx={{ minWidth: 650 }} stickyHeader aria-label="simple table">
                 <TableHead>
                   <TableRow>
+                    <StyledTableCell>Company Id</StyledTableCell>
                     <StyledTableCell>Job Title</StyledTableCell>
                     <StyledTableCell>Job Short Description</StyledTableCell>
                     <StyledTableCell>Job Description</StyledTableCell>
@@ -364,16 +387,17 @@ const Job_form = () => {
                       key={row.name}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
-                      <StyledTableCell scope="row">{row.job_title}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_short_description}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_description}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_requirements}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_responsibilities}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_department}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.qualifications_and_skills}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_location}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.job_type}</StyledTableCell>
-                      <StyledTableCell scope="row">{row.sallary}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.companyId}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobTitle}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobShortDescription}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobDetails}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobRequirements}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobResponsibilities}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.qualificationsAndSkills}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobDepartment}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobLocation}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.jobType}</StyledTableCell>
+                      <StyledTableCell scope="row">{row.salary}</StyledTableCell>
                       <StyledTableCell scope="row"><Button onClick={() => job_update_handeler(row.id)}>Update</Button></StyledTableCell>
                       <StyledTableCell scope="row"><Button onClick={() => job_delete_handeler(row.id)}>Delete</Button></StyledTableCell>
                     </StyledTableRow>
@@ -393,7 +417,7 @@ const Job_form = () => {
           </div>
         }
 
-        
+
         {/* {
           job_list.length > 0 &&
           <div className='w-[100%] px-[25px] h-[350px]'>
